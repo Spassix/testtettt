@@ -1,0 +1,16 @@
+# Fichiers de build et scripts
+scripts/
+node_modules/
+*.log
+.env
+.env.local
+.env.production.local
+.env.development.local
+
+# Fichiers de développement
+*.js.map
+*.css.map
+
+# Fichiers temporaires
+.tmp/
+temp/
