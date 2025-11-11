@@ -10,9 +10,13 @@
     row.className = "price-row";
     row.style.cssText = "display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem";
     
+    // Générer un ID unique pour cette ligne
+    const rowId = `price-row-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
     const qtyInput = document.createElement("input");
     qtyInput.type = "number";
     qtyInput.className = "price-quantity";
+    qtyInput.name = `price-quantity-${rowId}`;
     qtyInput.placeholder = "Quantité";
     qtyInput.min = "0";
     qtyInput.step = "0.01";
@@ -37,6 +41,7 @@
     const priceInput = document.createElement("input");
     priceInput.type = "number";
     priceInput.className = "price-value";
+    priceInput.name = `price-value-${rowId}`;
     priceInput.placeholder = "Prix (€)";
     priceInput.min = "0";
     priceInput.step = "0.01";
