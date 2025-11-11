@@ -21,7 +21,8 @@
     qtyInput.min = "0";
     qtyInput.step = "0.01";
     qtyInput.value = quantity;
-    qtyInput.required = true;
+    // Ne pas utiliser required pour éviter les erreurs de validation HTML5
+    // La validation sera faite manuellement dans syncHiddenInputs
     Object.assign(qtyInput.style, {
       flex: "1",
       background: "rgba(26,26,26,.92)",
@@ -46,7 +47,8 @@
     priceInput.min = "0";
     priceInput.step = "0.01";
     priceInput.value = price;
-    priceInput.required = true;
+    // Ne pas utiliser required pour éviter les erreurs de validation HTML5
+    // La validation sera faite manuellement dans syncHiddenInputs
     Object.assign(priceInput.style, {
       flex: "1",
       background: "rgba(26,26,26,.92)",
@@ -231,10 +233,72 @@
     }
   }
   
+  // Fonction de validation des prix
+  function validatePriceRows() {
+    const container = document.getElementById("productPricesContainer");
+    if (!container) return true;
+    
+    const rows = container.querySelectorAll(".price-row");
+    if (rows.length === 0) {
+      if (window.AdminUtils && window.AdminUtils.showToast) {
+        window.AdminUtils.showToast("Au moins une ligne de prix est requise", "error");
+      }
+      return false;
+    }
+    
+    let hasValidRow = false;
+    rows.forEach(row => {
+      const qtyInput = row.querySelector(".price-quantity");
+      const priceInput = row.querySelector(".price-value");
+      
+      if (qtyInput && priceInput) {
+        const quantity = parseFloat(qtyInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        
+        if (quantity > 0 && price > 0) {
+          hasValidRow = true;
+        } else if (quantity > 0 || price > 0) {
+          // Une seule valeur remplie, c'est invalide
+          qtyInput.style.borderColor = "#ef4444";
+          priceInput.style.borderColor = "#ef4444";
+          setTimeout(() => {
+            qtyInput.style.borderColor = "";
+            priceInput.style.borderColor = "";
+          }, 2000);
+        }
+      }
+    });
+    
+    if (!hasValidRow) {
+      if (window.AdminUtils && window.AdminUtils.showToast) {
+        window.AdminUtils.showToast("Veuillez remplir au moins une ligne de prix complète (quantité et prix)", "error");
+      }
+      return false;
+    }
+    
+    return true;
+  }
+
   // Fonction d'initialisation
   function initPricePatch() {
     createHiddenInputs();
     updatePriceMenuVisibility();
+    
+    // Intercepter la soumission du formulaire pour valider les prix
+    const form = document.getElementById("productForm");
+    if (form) {
+      form.addEventListener("submit", function(e) {
+        // Synchroniser avant validation
+        syncHiddenInputs();
+        
+        // Valider les prix
+        if (!validatePriceRows()) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }, true);
+    }
     
     // Bouton pour ajouter une ligne de prix
     const addBtn = document.getElementById("addPriceRowBtn");
