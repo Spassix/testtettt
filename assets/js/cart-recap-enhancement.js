@@ -19,17 +19,19 @@
 
   // Fonction pour améliorer le récapitulatif avec emojis et formatage
   function enhanceRecap() {
-    const copyRecapBtn = document.getElementById("copyRecapBtn");
-    if (!copyRecapBtn) return;
+    try {
+      const copyRecapBtn = document.getElementById("copyRecapBtn");
+      if (!copyRecapBtn) return;
 
-    // Vérifier si déjà patché
-    if (copyRecapBtn._recapEnhanced) return;
-    copyRecapBtn._recapEnhanced = true;
+      // Vérifier si déjà patché
+      if (copyRecapBtn._recapEnhanced) return;
+      copyRecapBtn._recapEnhanced = true;
 
-    const newBtn = copyRecapBtn.cloneNode(true);
-    copyRecapBtn.parentNode.replaceChild(newBtn, copyRecapBtn);
+      const newBtn = copyRecapBtn.cloneNode(true);
+      if (!copyRecapBtn.parentNode) return;
+      copyRecapBtn.parentNode.replaceChild(newBtn, copyRecapBtn);
 
-    newBtn.addEventListener("click", async function(e) {
+      newBtn.addEventListener("click", async function(e) {
       e.preventDefault();
       e.stopPropagation();
 
@@ -159,38 +161,75 @@
         alert("Impossible de copier automatiquement. Voici le récapitulatif :\n\n" + recap);
       }
     });
+    } catch (e) {
+      console.error("Erreur dans enhanceRecap:", e);
+    }
   }
 
-  // Initialiser
+  // Initialiser de manière sûre
   function init() {
-    setTimeout(() => {
-      enhanceRecap();
-    }, 500);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-
-  // Réinitialiser si le bouton est recréé
-  const observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-      if (mutation.type === 'childList') {
-        const copyRecapBtn = document.getElementById("copyRecapBtn");
-        if (copyRecapBtn && !copyRecapBtn._recapEnhanced) {
-          enhanceRecap();
-        }
+    try {
+      // Attendre que tout soit chargé
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function() {
+          setTimeout(init, 1000);
+        });
+        return;
       }
-    });
-  });
-
-  const cartPanel = document.querySelector('[data-panel="envoi"]');
-  if (cartPanel) {
-    observer.observe(cartPanel, { childList: true, subtree: true });
+      
+      setTimeout(function() {
+        try {
+          enhanceRecap();
+        } catch (e) {
+          console.error("Erreur lors de l'initialisation enhanceRecap:", e);
+        }
+      }, 1000);
+    } catch (e) {
+      console.error("Erreur dans init:", e);
+    }
   }
 
-  console.log("✅ Amélioration du récapitulatif activée");
+  // Démarrer l'initialisation de manière asynchrone
+  setTimeout(function() {
+    try {
+      init();
+    } catch (e) {
+      console.error("Erreur démarrage script:", e);
+    }
+  }, 500);
+
+  // Réinitialiser si le bouton est recréé (seulement si le panier existe)
+  setTimeout(function() {
+    try {
+      const observer = new MutationObserver(function(mutations) {
+        try {
+          mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+              const copyRecapBtn = document.getElementById("copyRecapBtn");
+              if (copyRecapBtn && !copyRecapBtn._recapEnhanced) {
+                enhanceRecap();
+              }
+            }
+          });
+        } catch (e) {
+          // Ignorer silencieusement les erreurs dans l'observer
+        }
+      });
+
+      // Attendre que le DOM soit prêt avant d'observer
+      setTimeout(function() {
+        try {
+          const cartPanel = document.querySelector('[data-panel="envoi"]');
+          if (cartPanel) {
+            observer.observe(cartPanel, { childList: true, subtree: true });
+          }
+        } catch (e) {
+          // Ignorer silencieusement si l'élément n'existe pas
+        }
+      }, 2000);
+    } catch (e) {
+      // Ignorer silencieusement les erreurs d'initialisation de l'observer
+    }
+  }, 1500);
 })();
 
