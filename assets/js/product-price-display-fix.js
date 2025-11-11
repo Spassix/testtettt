@@ -33,8 +33,8 @@
       return `${(product.price || 0).toFixed(2)}€`;
     }
 
-    // Si on a des prix par service configurés, utiliser la fonction de formatage
-    if (window.formatProductPrice) {
+    // Si on a des prix par service configurés, afficher le prix minimum
+    if (window.getPricesByService) {
       // Prendre la première quantité par défaut (ou utiliser le prix de base si pas de quantités)
       const firstQuantity = product.quantities && product.quantities.length > 0 
         ? product.quantities[0] 
@@ -43,14 +43,20 @@
       // Utiliser le prix de base (même si 0) et les transportTaxes pour calculer les prix par service
       const basePrice = firstQuantity.price || product.price || 0;
       
-      return window.formatProductPrice(
+      // Obtenir tous les prix par service
+      const prices = window.getPricesByService(
         basePrice,
         transportTaxes,
         firstQuantity.grammage || 1,
-        config,
-        firstQuantity.unit || product.unit || "g",
-        null // Pas de service sélectionné sur la carte produit
+        firstQuantity.unit || product.unit || "g"
       );
+      
+      // Trouver le prix minimum parmi tous les services
+      const allPrices = [prices.home, prices.postal, prices.meet].filter(p => p > 0);
+      if (allPrices.length > 0) {
+        const minPrice = Math.min(...allPrices);
+        return `${minPrice.toFixed(2)}€`;
+      }
     }
 
     // Fallback : afficher le prix de base

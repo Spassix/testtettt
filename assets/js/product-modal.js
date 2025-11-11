@@ -8,9 +8,17 @@
     }
   }
 
-  // Fonction pour obtenir les prix par service
+  // Fonction pour obtenir les prix par service (exportée globalement)
   // Les valeurs dans transportTaxes sont des PRIX FINAUX, pas des taxes à ajouter
+  window.getPricesByService = function(basePrice, transportTaxes, quantity, unit = "g") {
+    return getPricesByServiceInternal(basePrice, transportTaxes, quantity, unit);
+  };
+
   function getPricesByService(basePrice, transportTaxes, quantity, unit = "g") {
+    return getPricesByServiceInternal(basePrice, transportTaxes, quantity, unit);
+  }
+
+  function getPricesByServiceInternal(basePrice, transportTaxes, quantity, unit = "g") {
     if (!transportTaxes || !Array.isArray(transportTaxes) || transportTaxes.length === 0) {
       return { home: basePrice, postal: basePrice, meet: basePrice };
     }
@@ -224,30 +232,8 @@
             <div class="qty-options">
               ${product.quantities.map(item => {
                 const itemUnit = normalizeUnit(item.unit || "g");
-                // Obtenir le service sélectionné depuis le panier
-                let selectedService = null;
-                try {
-                  // Chercher dans le DOM le service sélectionné
-                  const activeServiceCard = document.querySelector(".service-card.active, .service-card.selected");
-                  if (activeServiceCard) {
-                    const serviceType = activeServiceCard.dataset.service || activeServiceCard.getAttribute("data-service");
-                    if (serviceType) selectedService = serviceType;
-                  }
-                  // Sinon, chercher dans localStorage
-                  if (!selectedService) {
-                    const cartServicesStr = localStorage.getItem("site_cart_services");
-                    if (cartServicesStr) {
-                      const cartServices = JSON.parse(cartServicesStr);
-                      // Vérifier quel service est actif (on prend le premier actif par défaut)
-                      if (cartServices.home) selectedService = "home";
-                      else if (cartServices.postal) selectedService = "postal";
-                      else if (cartServices.meet) selectedService = "meet";
-                    }
-                  }
-                } catch (e) {
-                  console.error("Erreur lecture services:", e);
-                }
-                const priceText = formatPrice(item.price, transportTaxes, item.grammage, config, itemUnit, selectedService);
+                // Dans la modale, toujours afficher tous les prix (pas de service sélectionné)
+                const priceText = formatPrice(item.price, transportTaxes, item.grammage, config, itemUnit, null);
                 return `
                   <button class="qty-btn" data-grammage="${item.grammage}" data-price="${item.price}" data-unit="${itemUnit}">
                     <span class="qty-grammage">${item.grammage}${itemUnit}</span>
@@ -275,29 +261,8 @@
               selection.textContent = `${grammage}${unit}`;
             }
             if (priceLabel) {
-              // Obtenir le service sélectionné depuis le panier
-              let selectedService = null;
-              try {
-                // Chercher dans le DOM le service sélectionné
-                const activeServiceCard = document.querySelector(".service-card.active, .service-card.selected");
-                if (activeServiceCard) {
-                  const serviceType = activeServiceCard.dataset.service || activeServiceCard.getAttribute("data-service");
-                  if (serviceType) selectedService = serviceType;
-                }
-                // Sinon, chercher dans localStorage
-                if (!selectedService) {
-                  const cartServicesStr = localStorage.getItem("site_cart_services");
-                  if (cartServicesStr) {
-                    const cartServices = JSON.parse(cartServicesStr);
-                    if (cartServices.home) selectedService = "home";
-                    else if (cartServices.postal) selectedService = "postal";
-                    else if (cartServices.meet) selectedService = "meet";
-                  }
-                }
-              } catch (e) {
-                console.error("Erreur lecture services:", e);
-              }
-              const priceText = formatPrice(price, transportTaxes, grammage, config, unit, selectedService);
+              // Dans la modale, toujours afficher tous les prix (pas de service sélectionné)
+              const priceText = formatPrice(price, transportTaxes, grammage, config, unit, null);
               priceLabel.textContent = priceText;
             }
           });
@@ -332,20 +297,8 @@
 
     if (priceLabel) {
       const selectedUnit = selectedQuantity?.unit || defaultUnit;
-      // Obtenir le service sélectionné depuis le panier
-      let selectedService = null;
-      try {
-        const cartServicesStr = localStorage.getItem("site_cart_services");
-        if (cartServicesStr) {
-          const cartServices = JSON.parse(cartServicesStr);
-          if (cartServices.home) selectedService = "home";
-          else if (cartServices.postal) selectedService = "postal";
-          else if (cartServices.meet) selectedService = "meet";
-        }
-      } catch (e) {
-        console.error("Erreur lecture services:", e);
-      }
-      const priceText = formatPrice(selectedPrice, transportTaxes, selectedQuantity?.grammage || 1, config, selectedUnit, selectedService);
+      // Dans la modale, toujours afficher tous les prix (pas de service sélectionné)
+      const priceText = formatPrice(selectedPrice, transportTaxes, selectedQuantity?.grammage || 1, config, selectedUnit, null);
       priceLabel.textContent = priceText;
     }
 
