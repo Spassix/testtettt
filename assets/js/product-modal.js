@@ -53,6 +53,11 @@
     return basePrice;
   }
 
+  // Fonction pour formater le prix selon la config (exportée globalement)
+  window.formatProductPrice = function(price, transportTaxes, quantity, config, unit = "g", selectedService = null) {
+    return formatPrice(price, transportTaxes, quantity, config, unit, selectedService);
+  };
+
   // Fonction pour formater le prix selon la config
   function formatPrice(price, transportTaxes, quantity, config, unit = "g", selectedService = null) {
     const priceQuantityMenuEnabled = config?.priceQuantityMenuEnabled !== false;
@@ -71,10 +76,15 @@
     
     // Sinon, afficher tous les prix disponibles
     const priceList = [];
-    if (prices.home !== price || prices.postal !== price || prices.meet !== price) {
-      if (prices.home !== price) priceList.push(`🚚 ${prices.home.toFixed(0)}€`);
-      if (prices.postal !== price) priceList.push(`📦 ${prices.postal.toFixed(0)}€`);
-      if (prices.meet !== price) priceList.push(`📍 ${prices.meet.toFixed(0)}€`);
+    // Vérifier si au moins un prix est différent du prix de base, ou si le prix de base est 0 et qu'il y a des taxes
+    const hasDifferentPrices = prices.home !== price || prices.postal !== price || prices.meet !== price;
+    const hasTaxesWithZeroBase = price === 0 && (prices.home > 0 || prices.postal > 0 || prices.meet > 0);
+    
+    if (hasDifferentPrices || hasTaxesWithZeroBase) {
+      // Afficher tous les prix qui sont différents de 0 ou différents du prix de base
+      if (prices.home > 0 && (prices.home !== price || price === 0)) priceList.push(`🚚 ${prices.home.toFixed(0)}€`);
+      if (prices.postal > 0 && (prices.postal !== price || price === 0)) priceList.push(`📦 ${prices.postal.toFixed(0)}€`);
+      if (prices.meet > 0 && (prices.meet !== price || price === 0)) priceList.push(`📍 ${prices.meet.toFixed(0)}€`);
     }
     
     if (priceList.length > 0) {
